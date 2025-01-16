@@ -1,0 +1,10 @@
+src/
+test/
+.github/
+.gitignore
+tsconfig.json
+*.log
+.DS_Store
+.vscode/
+.idea/
+coverage/ 
