@@ -14,7 +14,7 @@ export interface Options {
     /** link 标签的属性配置 rel 默认 prefetch */
     attrs?: {
         rel?: 'preload' | 'prefetch'
-        fetchpriority?: 'high' | 'low' | 'auto'
+        fetchPriority?: 'high' | 'low' | 'auto'
     } & Record<string, string>
     /** 同时预加载的图片数量 默认 2 */
     batchSize?: number
@@ -107,7 +107,7 @@ function getCachedGlobSync(pattern: string, options = {}) {
  *     attrs: {
  *         rel: 'prefetch',
  *         crossorigin: 'anonymous',
- *         fetchpriority: 'low'
+ *         fetchPriority: 'low'
  *     },
  *     batchSize: 2,
  *     publicDir: false,
@@ -236,9 +236,9 @@ export default function VitePluginPreloadImages(options: Options): Plugin {
                             link.as = 'image'
                             link.href = src
                             link.rel = '${attrs.rel || 'prefetch'}'
-                            link.fetchpriority = '${attrs.fetchpriority || 'low'}'
+                            link.fetchPriority = '${attrs.fetchPriority || 'low'}'
                             ${Object.entries(attrs)
-                                .filter(([key]) => !['as', 'href', 'rel', 'fetchpriority'].includes(key))
+                                .filter(([key]) => !['as', 'href', 'rel', 'fetchPriority'].includes(key))
                                 .map(([key, value]) => `link.${key} = '${value}'`)
                                 .join(`
                             `)}

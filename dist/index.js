@@ -168,18 +168,23 @@ function VitePluginPreloadImages(options) {
                             link.fetchpriority = '${attrs.fetchpriority || "low"}'
                             ${Object.entries(attrs).filter(([key]) => !["as", "href", "rel", "fetchpriority"].includes(key)).map(([key, value]) => `link.${key} = '${value}'`).join(`
                             `)}
-                            link.onload = resolve
-                            link.onerror = () => {
-                                console.warn('[vite-plugin-preload-images] Failed to preload:', src)
+                            document.head.appendChild(link)
+                            
+                            const timeoutId = setTimeout(() => {
+                                console.warn('[vite-plugin-preload-images] Timeout preloading:', src)
+                                reject()
+                            }, ${timeout})
+
+                            link.onload = () => {
+                                clearTimeout(timeoutId)
                                 resolve()
                             }
                             
-                            setTimeout(() => {
-                                console.warn('[vite-plugin-preload-images] Timeout preloading:', src)
-                                resolve()
-                            }, ${timeout})
-                            
-                            document.head.appendChild(link)
+                            link.onerror = () => {
+                                clearTimeout(timeoutId)
+                                console.warn('[vite-plugin-preload-images] Failed to preload:', src)
+                                reject()
+                            } 
                         })
                     }
 
