@@ -76,9 +76,15 @@ function VitePluginPreloadImages(options) {
       if (typeof dirs === "string") {
         if (!publicDir) {
           const files = getCachedGlobSync(dirs);
-          bundles.forEach((item) => {
-            if (files?.includes(Reflect.get(item, "originalFileName"))) {
-              assets.push(item.fileName);
+          bundles.forEach((bundle2) => {
+            if (Reflect.get(bundle2, "originalFileName")) {
+              if (files?.includes(Reflect.get(bundle2, "originalFileName"))) {
+                assets.push(bundle2.fileName);
+              }
+            } else {
+              if (files?.some((file) => file.includes(bundle2.name))) {
+                assets.push(bundle2.fileName);
+              }
             }
           });
         }
@@ -87,15 +93,27 @@ function VitePluginPreloadImages(options) {
           if (typeof item === "string" && !publicDir) {
             const files = getCachedGlobSync(item);
             bundles.forEach((bundle2) => {
-              if (files?.includes(Reflect.get(bundle2, "originalFileName"))) {
-                assets.push(bundle2.fileName);
+              if (Reflect.get(bundle2, "originalFileName")) {
+                if (files?.includes(Reflect.get(bundle2, "originalFileName"))) {
+                  assets.push(bundle2.fileName);
+                }
+              } else {
+                if (files?.some((file) => file.includes(bundle2.name))) {
+                  assets.push(bundle2.fileName);
+                }
               }
             });
           } else if (IsDirOptions(item) && !item.publicDir) {
             const files = getCachedGlobSync(item.dir);
             bundles.forEach((bundle2) => {
-              if (files?.includes(Reflect.get(bundle2, "originalFileName"))) {
-                assets.push(bundle2.fileName);
+              if (Reflect.get(bundle2, "originalFileName")) {
+                if (files?.includes(Reflect.get(bundle2, "originalFileName"))) {
+                  assets.push(bundle2.fileName);
+                }
+              } else {
+                if (files?.some((file) => file.includes(bundle2.name))) {
+                  assets.push(bundle2.fileName);
+                }
               }
             });
           }

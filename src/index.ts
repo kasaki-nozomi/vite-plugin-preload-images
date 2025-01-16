@@ -64,6 +64,8 @@ function getCachedGlobSync(pattern: string, options = {}) {
  * 支持开发环境和生产环境
  * 支持 public 目录和 assets 目录的图片
  * 可自定义 link 标签属性
+ * 
+ * 注：rollup 版本 4.20.0（vite 版本 5.4.2） 及以上为精准匹配预加载图片，否则重名文件也会被预加载
  *
  * @param {Options} options - 插件配置项
  * @param {string} options.dirs - 图片文件匹配模式
@@ -142,9 +144,15 @@ export default function VitePluginPreloadImages(options: Options): Plugin {
             if (typeof dirs === 'string') {
                 if (!publicDir) {
                     const files = getCachedGlobSync(dirs)
-                    bundles.forEach((item) => {
-                        if (files?.includes(Reflect.get(item, 'originalFileName'))) {
-                            assets.push(item.fileName)
+                    bundles.forEach((bundle) => {
+                        if (Reflect.get(bundle, 'originalFileName')) {
+                            if (files?.includes(Reflect.get(bundle, 'originalFileName'))) {
+                                assets.push(bundle.fileName)
+                            }
+                        } else {
+                            if (files?.some(file => file.includes(bundle.name!))) {
+                                assets.push(bundle.fileName)
+                            }
                         }
                     })
                 }
@@ -152,16 +160,28 @@ export default function VitePluginPreloadImages(options: Options): Plugin {
                 dirs.forEach((item) => {
                     if (typeof item === 'string' && !publicDir) {
                         const files = getCachedGlobSync(item)
-                        bundles.forEach((bundle) => {
-                            if (files?.includes(Reflect.get(bundle, 'originalFileName'))) {
-                                assets.push(bundle.fileName)
+                        bundles.forEach(bundle => {
+                            if (Reflect.get(bundle, 'originalFileName')) {
+                                if (files?.includes(Reflect.get(bundle, 'originalFileName'))) {
+                                    assets.push(bundle.fileName)
+                                }
+                            } else {
+                                if (files?.some(file => file.includes(bundle.name!))) {
+                                    assets.push(bundle.fileName)
+                                }
                             }
                         })
                     } else if (IsDirOptions(item) && !item.publicDir) {
                         const files = getCachedGlobSync(item.dir)
-                        bundles.forEach((bundle) => {
-                            if (files?.includes(Reflect.get(bundle, 'originalFileName'))) {
-                                assets.push(bundle.fileName)
+                        bundles.forEach(bundle => {
+                            if (Reflect.get(bundle, 'originalFileName')) {
+                                if (files?.includes(Reflect.get(bundle, 'originalFileName'))) {
+                                    assets.push(bundle.fileName)
+                                }
+                            } else {
+                                if (files?.some(file => file.includes(bundle.name!))) {
+                                    assets.push(bundle.fileName)
+                                }
                             }
                         })
                     }

@@ -30,6 +30,8 @@ interface Options {
  * 支持 public 目录和 assets 目录的图片
  * 可自定义 link 标签属性
  *
+ * 注：rollup 版本 4.20.0（vite 版本 5.4.2） 及以上为精准匹配预加载图片，否则重名文件也会被预加载
+ *
  * @param {Options} options - 插件配置项
  * @param {string} options.dirs - 图片文件匹配模式
  * @param {Object} [options.attrs] - link 标签属性配置
