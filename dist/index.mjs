@@ -5,14 +5,24 @@ function IsDirOptions(item) {
 }
 function validateOptions(options) {
   const errors = [];
-  if (!("dirs" in options)) {
+  if (!options.dirs) {
     errors.push("Param dirs is required!");
+  } else if (typeof options.dirs !== "string" && !Array.isArray(options.dirs)) {
+    errors.push("Param dirs must be string or array!");
+  } else if (Array.isArray(options.dirs)) {
+    options.dirs.forEach((item, index) => {
+      if (typeof item === "string") {
+        if (!item.trim()) errors.push(`Param dirs[${index}] cannot be empty string!`);
+      } else if (!IsDirOptions(item)) {
+        errors.push(`Param dirs[${index}] must be have dir and publicDir property!`);
+      }
+    });
   }
-  if ("batchSize" in options && options.batchSize < 1) {
-    errors.push("BatchSize must be greater than 0!");
+  if ("batchSize" in options && (typeof options.batchSize !== "number" || options.batchSize < 1)) {
+    errors.push("BatchSize must be number and greater than 0!");
   }
-  if ("timeout" in options && options.timeout < 1e3) {
-    errors.push("Timeout must be greater than 1000ms!");
+  if ("timeout" in options && (typeof options.timeout !== "number" || options.timeout < 1e3)) {
+    errors.push("Timeout must be number and greater than 1000!");
   }
   if (errors.length) {
     throw new Error(`[vite-plugin-preload-images]: ${errors.join(" ")}`);

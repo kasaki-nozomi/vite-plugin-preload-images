@@ -32,14 +32,24 @@ function IsDirOptions(item: string | DirOptions): item is DirOptions {
 // 配置校验
 function validateOptions(options: Options) {
     const errors: string[] = []
-    if (!('dirs' in options)) {
+    if (!options.dirs) {
         errors.push('Param dirs is required!')
+    } else if (typeof options.dirs !== 'string' && !Array.isArray(options.dirs)) {
+        errors.push('Param dirs must be string or array!')
+    } else if (Array.isArray(options.dirs)) {
+        options.dirs.forEach((item, index) => {
+            if (typeof item === 'string') {
+                if (!item.trim()) errors.push(`Param dirs[${index}] cannot be empty string!`)
+            } else if (!IsDirOptions(item)) {
+                errors.push(`Param dirs[${index}] must be have dir and publicDir property!`)
+            }
+        })
     }
-    if ('batchSize' in options && options.batchSize! < 1) {
-        errors.push('BatchSize must be greater than 0!')
+    if ('batchSize' in options && (typeof options.batchSize !== 'number' || options.batchSize! < 1)) {
+        errors.push('BatchSize must be number and greater than 0!')
     }
-    if ('timeout' in options && options.timeout! < 1000) {
-        errors.push('Timeout must be greater than 1000ms!')
+    if ('timeout' in options && (typeof options.timeout !== 'number' || options.timeout! < 1000)) {
+        errors.push('Timeout must be number and greater than 1000!')
     }
     if (errors.length) {
         throw new Error(`[vite-plugin-preload-images]: ${errors.join(' ')}`)
@@ -63,7 +73,7 @@ function matchBundleWithFiles(bundle: any, files: string[] | undefined) {
     if (Reflect.get(bundle, 'originalFileName')) {
         return files.includes(Reflect.get(bundle, 'originalFileName'))
     } else {
-        return files.some(file => file.includes(bundle.name!))
+        return files.some((file) => file.includes(bundle.name!))
     }
 }
 
@@ -71,7 +81,7 @@ function matchBundleWithFiles(bundle: any, files: string[] | undefined) {
 function collectMatchedFiles(pattern: string, bundles: any[], options = {}) {
     const matchedFiles: string[] = []
     const files = getCachedGlobSync(pattern, options)
-    bundles.forEach(bundle => {
+    bundles.forEach((bundle) => {
         if (matchBundleWithFiles(bundle, files)) {
             matchedFiles.push(bundle.fileName)
         }
@@ -87,12 +97,15 @@ function collectMatchedFiles(pattern: string, bundles: any[], options = {}) {
  * 支持开发环境和生产环境
  * 支持 public 目录和 assets 目录的图片
  * 可自定义 link 标签属性
- * 
- * 注：非 public 目录下 rollup 版本 4.20.0（vite 版本 5.4.2）及以上为精准匹配（originalFileName）预加载图片
- * 注：否则，指定文件夹外的其他被打包处理的同名的资源也会被预加载
+ *
+ * 开发环境下会处理文件夹下所有匹配到的资源
+ * 生产环境仅处理被打包处理的资源
+ *
+ * 非 public 目录下 rollup 版本 4.20.0（vite 版本 5.4.2）及以上为精准匹配（originalFileName）预加载图片
+ * 否则，指定文件夹外的其他被打包处理的同名的资源也会被预加载
  *
  * @param {Options} options - 插件配置项
- * @param {string} options.dirs - 图片文件匹配模式
+ * @param {string | (string | DirOptions)[]} options.dirs - 图片文件匹配模式
  * @param {Object} [options.attrs] - link 标签属性配置
  * @param {number} [options.batchSize=2] - 同时预加载的图片数量
  * @param {boolean} [options.publicDir=false] - 是否从 public 目录读取图片
@@ -284,4 +297,4 @@ export default function VitePluginPreloadImages(options: Options): Plugin {
             ]
         }
     }
-} 
+}

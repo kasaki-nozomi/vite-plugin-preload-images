@@ -30,11 +30,14 @@ interface Options {
  * 支持 public 目录和 assets 目录的图片
  * 可自定义 link 标签属性
  *
- * 注：非 public 目录下 rollup 版本 4.20.0（vite 版本 5.4.2）及以上为精准匹配（originalFileName）预加载图片
- * 注：否则，指定文件夹外的其他被打包处理的同名的资源也会被预加载
+ * 开发环境下会处理文件夹下所有匹配到的资源
+ * 生产环境仅处理被打包处理的资源
+ *
+ * 非 public 目录下 rollup 版本 4.20.0（vite 版本 5.4.2）及以上为精准匹配（originalFileName）预加载图片
+ * 否则，指定文件夹外的其他被打包处理的同名的资源也会被预加载
  *
  * @param {Options} options - 插件配置项
- * @param {string} options.dirs - 图片文件匹配模式
+ * @param {string | (string | DirOptions)[]} options.dirs - 图片文件匹配模式
  * @param {Object} [options.attrs] - link 标签属性配置
  * @param {number} [options.batchSize=2] - 同时预加载的图片数量
  * @param {boolean} [options.publicDir=false] - 是否从 public 目录读取图片
