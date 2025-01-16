@@ -56,6 +56,29 @@ function getCachedGlobSync(pattern: string, options = {}) {
     return globCache.get(key)
 }
 
+// 匹配文件
+function matchBundleWithFiles(bundle: any, files: string[] | undefined) {
+    if (!files) return false
+    // rollup 版本 4.20.0（vite 版本 5.4.2）及以上有 originalFileName 属性
+    if (Reflect.get(bundle, 'originalFileName')) {
+        return files.includes(Reflect.get(bundle, 'originalFileName'))
+    } else {
+        return files.some(file => file.includes(bundle.name!))
+    }
+}
+
+// 收集匹配的文件名
+function collectMatchedFiles(pattern: string, bundles: any[], options = {}) {
+    const matchedFiles: string[] = []
+    const files = getCachedGlobSync(pattern, options)
+    bundles.forEach(bundle => {
+        if (matchBundleWithFiles(bundle, files)) {
+            matchedFiles.push(bundle.fileName)
+        }
+    })
+    return matchedFiles
+}
+
 /**
  * Vite 图片预加载插件
  *
@@ -65,7 +88,8 @@ function getCachedGlobSync(pattern: string, options = {}) {
  * 支持 public 目录和 assets 目录的图片
  * 可自定义 link 标签属性
  * 
- * 注：rollup 版本 4.20.0（vite 版本 5.4.2） 及以上为精准匹配预加载图片，否则重名文件也会被预加载
+ * 注：非 public 目录下 rollup 版本 4.20.0（vite 版本 5.4.2）及以上为精准匹配（originalFileName）预加载图片
+ * 注：否则，指定文件夹外的其他被打包处理的同名的资源也会被预加载
  *
  * @param {Options} options - 插件配置项
  * @param {string} options.dirs - 图片文件匹配模式
@@ -143,47 +167,14 @@ export default function VitePluginPreloadImages(options: Options): Plugin {
 
             if (typeof dirs === 'string') {
                 if (!publicDir) {
-                    const files = getCachedGlobSync(dirs)
-                    bundles.forEach((bundle) => {
-                        if (Reflect.get(bundle, 'originalFileName')) {
-                            if (files?.includes(Reflect.get(bundle, 'originalFileName'))) {
-                                assets.push(bundle.fileName)
-                            }
-                        } else {
-                            if (files?.some(file => file.includes(bundle.name!))) {
-                                assets.push(bundle.fileName)
-                            }
-                        }
-                    })
+                    assets.push(...collectMatchedFiles(dirs, bundles))
                 }
             } else if (Array.isArray(dirs)) {
                 dirs.forEach((item) => {
                     if (typeof item === 'string' && !publicDir) {
-                        const files = getCachedGlobSync(item)
-                        bundles.forEach(bundle => {
-                            if (Reflect.get(bundle, 'originalFileName')) {
-                                if (files?.includes(Reflect.get(bundle, 'originalFileName'))) {
-                                    assets.push(bundle.fileName)
-                                }
-                            } else {
-                                if (files?.some(file => file.includes(bundle.name!))) {
-                                    assets.push(bundle.fileName)
-                                }
-                            }
-                        })
+                        assets.push(...collectMatchedFiles(item, bundles))
                     } else if (IsDirOptions(item) && !item.publicDir) {
-                        const files = getCachedGlobSync(item.dir)
-                        bundles.forEach(bundle => {
-                            if (Reflect.get(bundle, 'originalFileName')) {
-                                if (files?.includes(Reflect.get(bundle, 'originalFileName'))) {
-                                    assets.push(bundle.fileName)
-                                }
-                            } else {
-                                if (files?.some(file => file.includes(bundle.name!))) {
-                                    assets.push(bundle.fileName)
-                                }
-                            }
-                        })
+                        assets.push(...collectMatchedFiles(item.dir, bundles))
                     }
                 })
             }
@@ -196,24 +187,18 @@ export default function VitePluginPreloadImages(options: Options): Plugin {
             // 开发环境 | 生产环境
             if (ctx.server) {
                 if (typeof dirs === 'string') {
-                    const globResult = getCachedGlobSync(dirs, publicDir ? { cwd: config.publicDir } : {})
-                    if (globResult) {
-                        images = globResult
-                    }
+                    const files = getCachedGlobSync(dirs, publicDir ? { cwd: config.publicDir } : {})
+                    if (files) images.push(...files)
                 } else if (Array.isArray(dirs)) {
                     dirs.forEach((item) => {
                         if (typeof item === 'string') {
                             if (publicDir && !config.publicDir) return
                             const files = getCachedGlobSync(item, publicDir ? { cwd: config.publicDir } : {})
-                            if (files) {
-                                images.push(...files)
-                            }
+                            if (files) images.push(...files)
                         } else if (IsDirOptions(item)) {
                             if (item.publicDir && !config.publicDir) return
                             const files = getCachedGlobSync(item.dir, item.publicDir ? { cwd: config.publicDir } : {})
-                            if (files) {
-                                images.push(...files)
-                            }
+                            if (files) images.push(...files)
                         }
                     })
                 }
@@ -221,23 +206,17 @@ export default function VitePluginPreloadImages(options: Options): Plugin {
                 if (typeof dirs === 'string') {
                     if (publicDir && config.publicDir) {
                         const files = getCachedGlobSync(dirs, { cwd: config.publicDir })
-                        if (files) {
-                            images.push(...files)
-                        }
+                        if (files) images.push(...files)
                     }
                 } else if (Array.isArray(dirs)) {
                     dirs.forEach((item) => {
                         if (typeof item === 'string' && publicDir && config.publicDir) {
                             const files = getCachedGlobSync(item, { cwd: config.publicDir })
-                            if (files) {
-                                images.push(...files)
-                            }
+                            if (files) images.push(...files)
                         }
                         if (IsDirOptions(item) && item.publicDir && config.publicDir) {
                             const files = getCachedGlobSync(item.dir, { cwd: config.publicDir })
-                            if (files) {
-                                images.push(...files)
-                            }
+                            if (files) images.push(...files)
                         }
                     })
                 }

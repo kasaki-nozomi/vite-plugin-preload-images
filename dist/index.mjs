@@ -26,6 +26,24 @@ function getCachedGlobSync(pattern, options = {}) {
   }
   return globCache.get(key);
 }
+function matchBundleWithFiles(bundle, files) {
+  if (!files) return false;
+  if (Reflect.get(bundle, "originalFileName")) {
+    return files.includes(Reflect.get(bundle, "originalFileName"));
+  } else {
+    return files.some((file) => file.includes(bundle.name));
+  }
+}
+function collectMatchedFiles(pattern, bundles, options = {}) {
+  const matchedFiles = [];
+  const files = getCachedGlobSync(pattern, options);
+  bundles.forEach((bundle) => {
+    if (matchBundleWithFiles(bundle, files)) {
+      matchedFiles.push(bundle.fileName);
+    }
+  });
+  return matchedFiles;
+}
 function VitePluginPreloadImages(options) {
   validateOptions(options);
   const { dirs, attrs = {}, batchSize = 2, publicDir = false, timeout = 5e3 } = options;
@@ -41,47 +59,14 @@ function VitePluginPreloadImages(options) {
       const bundles = Object.values(bundle);
       if (typeof dirs === "string") {
         if (!publicDir) {
-          const files = getCachedGlobSync(dirs);
-          bundles.forEach((bundle2) => {
-            if (Reflect.get(bundle2, "originalFileName")) {
-              if (files?.includes(Reflect.get(bundle2, "originalFileName"))) {
-                assets.push(bundle2.fileName);
-              }
-            } else {
-              if (files?.some((file) => file.includes(bundle2.name))) {
-                assets.push(bundle2.fileName);
-              }
-            }
-          });
+          assets.push(...collectMatchedFiles(dirs, bundles));
         }
       } else if (Array.isArray(dirs)) {
         dirs.forEach((item) => {
           if (typeof item === "string" && !publicDir) {
-            const files = getCachedGlobSync(item);
-            bundles.forEach((bundle2) => {
-              if (Reflect.get(bundle2, "originalFileName")) {
-                if (files?.includes(Reflect.get(bundle2, "originalFileName"))) {
-                  assets.push(bundle2.fileName);
-                }
-              } else {
-                if (files?.some((file) => file.includes(bundle2.name))) {
-                  assets.push(bundle2.fileName);
-                }
-              }
-            });
+            assets.push(...collectMatchedFiles(item, bundles));
           } else if (IsDirOptions(item) && !item.publicDir) {
-            const files = getCachedGlobSync(item.dir);
-            bundles.forEach((bundle2) => {
-              if (Reflect.get(bundle2, "originalFileName")) {
-                if (files?.includes(Reflect.get(bundle2, "originalFileName"))) {
-                  assets.push(bundle2.fileName);
-                }
-              } else {
-                if (files?.some((file) => file.includes(bundle2.name))) {
-                  assets.push(bundle2.fileName);
-                }
-              }
-            });
+            assets.push(...collectMatchedFiles(item.dir, bundles));
           }
         });
       }
@@ -91,24 +76,18 @@ function VitePluginPreloadImages(options) {
       let images = [];
       if (ctx.server) {
         if (typeof dirs === "string") {
-          const globResult = getCachedGlobSync(dirs, publicDir ? { cwd: config.publicDir } : {});
-          if (globResult) {
-            images = globResult;
-          }
+          const files = getCachedGlobSync(dirs, publicDir ? { cwd: config.publicDir } : {});
+          if (files) images.push(...files);
         } else if (Array.isArray(dirs)) {
           dirs.forEach((item) => {
             if (typeof item === "string") {
               if (publicDir && !config.publicDir) return;
               const files = getCachedGlobSync(item, publicDir ? { cwd: config.publicDir } : {});
-              if (files) {
-                images.push(...files);
-              }
+              if (files) images.push(...files);
             } else if (IsDirOptions(item)) {
               if (item.publicDir && !config.publicDir) return;
               const files = getCachedGlobSync(item.dir, item.publicDir ? { cwd: config.publicDir } : {});
-              if (files) {
-                images.push(...files);
-              }
+              if (files) images.push(...files);
             }
           });
         }
@@ -116,23 +95,17 @@ function VitePluginPreloadImages(options) {
         if (typeof dirs === "string") {
           if (publicDir && config.publicDir) {
             const files = getCachedGlobSync(dirs, { cwd: config.publicDir });
-            if (files) {
-              images.push(...files);
-            }
+            if (files) images.push(...files);
           }
         } else if (Array.isArray(dirs)) {
           dirs.forEach((item) => {
             if (typeof item === "string" && publicDir && config.publicDir) {
               const files = getCachedGlobSync(item, { cwd: config.publicDir });
-              if (files) {
-                images.push(...files);
-              }
+              if (files) images.push(...files);
             }
             if (IsDirOptions(item) && item.publicDir && config.publicDir) {
               const files = getCachedGlobSync(item.dir, { cwd: config.publicDir });
-              if (files) {
-                images.push(...files);
-              }
+              if (files) images.push(...files);
             }
           });
         }
