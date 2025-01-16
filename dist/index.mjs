@@ -131,8 +131,8 @@ function VitePluginPreloadImages(options) {
                             link.as = 'image'
                             link.href = src
                             link.rel = '${attrs.rel || "prefetch"}'
-                            link.fetchpriority = '${attrs.fetchpriority || "low"}'
-                            ${Object.entries(attrs).filter(([key]) => !["as", "href", "rel", "fetchpriority"].includes(key)).map(([key, value]) => `link.${key} = '${value}'`).join(`
+                            link.fetchPriority = '${attrs.fetchPriority || "low"}'
+                            ${Object.entries(attrs).filter(([key]) => !["as", "href", "rel", "fetchPriority"].includes(key)).map(([key, value]) => `link.${key} = '${value}'`).join(`
                             `)}
                             document.head.appendChild(link)
                             

@@ -12,7 +12,7 @@ interface Options {
     /** link 标签的属性配置 rel 默认 prefetch */
     attrs?: {
         rel?: 'preload' | 'prefetch';
-        fetchpriority?: 'high' | 'low' | 'auto';
+        fetchPriority?: 'high' | 'low' | 'auto';
     } & Record<string, string>;
     /** 同时预加载的图片数量 默认 2 */
     batchSize?: number;
@@ -72,7 +72,7 @@ interface Options {
  *     attrs: {
  *         rel: 'prefetch',
  *         crossorigin: 'anonymous',
- *         fetchpriority: 'low'
+ *         fetchPriority: 'low'
  *     },
  *     batchSize: 2,
  *     publicDir: false,
