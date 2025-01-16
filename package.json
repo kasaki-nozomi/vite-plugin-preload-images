@@ -1,6 +1,6 @@
 {
     "name": "vite-plugin-preload-images",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "description": "vite-plugin-preload-images",
     "main": "dist/index.js",
     "module": "dist/index.mjs",
