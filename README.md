@@ -85,7 +85,7 @@ VitePluginImagePreload({
     attrs: {
         rel: 'prefetch',
         crossorigin: 'anonymous',
-        fetchpriority: 'low'
+        fetchPriority: 'low'
     },
     batchSize: 2,
     publicDir: false,
