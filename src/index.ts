@@ -40,13 +40,23 @@ function validateOptions(options: Options) {
         options.dirs.forEach((item, index) => {
             if (typeof item === 'string') {
                 if (!item.trim()) errors.push(`Param dirs[${index}] cannot be empty string!`)
-            } else if (!IsDirOptions(item)) {
-                errors.push(`Param dirs[${index}] must be have dir and publicDir property!`)
+            } else if (IsDirOptions(item)) {
+                if (!item.dir.trim()) {
+                    errors.push(`Param dirs[${index}] must be have dir property!`)
+                }
+                if (typeof item.publicDir !== 'boolean') {
+                    errors.push(`Param dirs[${index}].publicDir must be boolean!`)
+                }
+            } else {
+                errors.push(`Param dirs[${index}] must be string or object!`)
             }
         })
     }
     if ('batchSize' in options && (typeof options.batchSize !== 'number' || options.batchSize! < 1)) {
         errors.push('BatchSize must be number and greater than 0!')
+    }
+    if ('publicDir' in options && typeof options.publicDir !== 'boolean') {
+        errors.push('PublicDir must be boolean!')
     }
     if ('timeout' in options && (typeof options.timeout !== 'number' || options.timeout! < 1000)) {
         errors.push('Timeout must be number and greater than 1000!')
