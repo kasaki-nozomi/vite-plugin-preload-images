@@ -1,15 +1,15 @@
 # vite-plugin-preload-images
 
-Vite 插件：图片预加载 
+Vite Plugin: Preload Images
 
-## 安装
+## Installation
 
 ```bash
 npm install vite-plugin-preload-images -D
 pnpm add vite-plugin-preload-images -D
 ```
 
-## 使用
+## Usage
 
 ```typescript
 import { defineConfig } from 'vite'
@@ -27,7 +27,7 @@ export default defineConfig({
 })
 ```
 
-## 配置
+## Options
 
 | 选项 | 类型 | 默认值 | 描述 |
 |------|------|--------|------|
@@ -37,7 +37,7 @@ export default defineConfig({
 | publicDir | boolean | false | 是否从 public 目录读取 |
 | timeout | number | 5000 | 加载超时时间(ms) |
 
-## 示例
+## Examples
 
 ```typescript
 VitePluginImagePreload({
